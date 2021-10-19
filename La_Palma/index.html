@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta charset="utf-8">
+    <title>Erupción en La Palma</title>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet" />
+    <script src="plugins/Leaflet.Control.Appearance/L.Control.Appearance.js"></script>
+    <script src="plugins/sidebar-v2-master/js/leaflet-sidebar.js"></script>
+    <link rel="stylesheet" href="plugins/sidebar-v2-master/css/leaflet-sidebar.css"/>
+    <script type="text/javascript" src="data/LP_Lava_flow.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        html,
+        body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
+        }
+        .legend {
+            padding: 6px 8px;
+            background-color: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.8;
+        }
+        div.legend.leaflet-control br {
+            clear: both;
+        }
+
+        #map {
+        z-index: 0;
+        height: 100%;
+        }
+
+        .lorem {
+            font-style: italic;
+            color: #AAA;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar" class="sidebar collapsed">
+        <!-- Nav tabs -->
+        <div class="sidebar-tabs">
+            <ul role="tablist">
+                <li><a href="#home" role="tab"><i class="fa fa-bars"></i></a></li>
+                
+        </ul>
+
+        </div>
+
+        <!-- Tab panes -->
+        <div class="sidebar-content">
+            <div class="sidebar-pane" id="home">
+                <h1 class="sidebar-header">
+                    Erupción en La Palma
+                    <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+                </h1>
+                <h4>La erupción comenzó el 19 de sptiembre de 2021 en la zona de Cabeza de Vaca, en el municipio de El Paso.</h4>
+                <p>El mapa recopila información hasta el 17/10/2021. Se muestra la evolución de las coladas de lava y se incluyen imágenes de los satélites Sentinel 2 y Landsat 8.</p>
+                <p>La composición de las imágenes de satélite se ha realizado utilizando las bandas espectrales del infrarrojo de onda corta (SWIR) y banda del espectro visible.</p>
+                <p class="lorem">Procesado de imágenes y web mapping: <a href="https://twitter.com/chuanvidal" target="_blank">Juanjo Vidal</a></p>
+                <p class="lorem">Fuente: <a href="https://emergency.copernicus.eu/" target="_blank">Copernicus EMS</a> , <a href="https://scihub.copernicus.eu/" target="_blank">Copernicus OAH</a> y <a href="https://www.usgs.gov/core-science-systems/nli/landsat" target="_blank">USGS Landsat</a> </p>
+
+            </div>
+
+            <div class="sidebar-pane" id="profile">
+                <h1 class="sidebar-header">Profile<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+            </div>
+
+            <div class="sidebar-pane" id="messages">
+                <h1 class="sidebar-header">Messages<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+            </div>
+
+            <div class="sidebar-pane" id="settings">
+                <h1 class="sidebar-header">Settings<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+            </div>
+        </div>
+    </div>
+
+<div id="map" class="sidebar-map"></div>
+
+
+<script>
+
+
+var OpenStreetMap =  L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", 
+    {attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}
+);
+
+
+var Imagen =  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+});
+
+var IGN = L.tileLayer.wms('https://www.ign.es/wms-inspire/mapa-raster', {
+    layers: 'mtn_rasterizado', attribution: 'IGN ESpaña'
+});
+
+var landsat1 =  L.imageOverlay('images/landsat_20210926.jpeg', 
+        [[28.4397320663305031, -18.0222706667425001],
+         [28.8919370390515020, -17.7025297770335008]]);
+        
+var sentinel1 = L.imageOverlay('images/sentinel_20210930.jpeg', 
+        [[28.4397320663305031, -18.0222706667425001],
+         [28.8919370390515020, -17.7025297770335008]]);
+
+var sentinel2 = L.imageOverlay('images/sentinel_20211010.jpeg', 
+        [[28.4397320663305031, -18.0222706667425001],
+         [28.8919370390515020, -17.7025297770335008]]);
+
+var sentinel3 = L.imageOverlay('images/sentinel_20211015.jpeg', 
+        [[28.4397320663305031, -18.0222706667425001],
+         [28.8919370390515020, -17.7025297770335008]]);
+
+var map = L.map('map', {
+    center: [28.615220, -17.894685],
+    zoom: 14,
+    zoomControl: true,
+    layers: [OpenStreetMap]
+});
+
+function lava_color(d) {
+    if(d === '2021-10-17') return "#0c0927";
+    if(d === '2021-10-15') return "#231151";
+    if(d === '2021-10-12') return "#410f74";
+    if(d === '2021-10-09') return "#5e177f";
+    if(d === '2021-10-05') return "#7b2282";
+    if(d === '2021-10-01') return "#982c80";
+    if(d === '2021-09-28') return "#b63679";
+    if(d === '2021-09-27') return "#d3426e";
+    if(d === '2021-09-26') return "#eb5761";
+    if(d === '2021-09-25') return "#f8765c";
+    if(d === '2021-09-24') return "#fe9969";
+    if(d === '2021-09-23') return "#febb80";
+    if(d === '2021-09-22') return "#fedc9d";
+    return "#fcfdbf";
+}
+
+function lava_style(feature) {
+    return {
+        fillColor: lava_color(feature.properties.Date),
+        weight: 0.3,
+        opacity: 0.5,
+        color: "black",
+        fillOpacity: 0.75
+    };
+}
+
+var lava = L.geoJSON(LP_Lava_flow, {
+            style: lava_style,
+            onEachFeature: function(feature, layer) {
+                layer.bindPopup(
+                    '<div class="popup">' + 
+                    '<b>' + "Fecha: " + feature.properties.Date + '</b>' + '<br>' +
+                    "Area (ha): " + feature.properties.area + '<br>' +  
+                    '</div>'
+                );
+            }
+        }).addTo(map);
+        
+
+var baseMaps = {
+    "Open Street Map": OpenStreetMap,
+    "Base IGN": IGN,
+    "Imagen": Imagen
+   
+};
+
+var overlayMaps = {
+    "Coladas de lava": lava,
+};
+
+var overlayMaps2 = {
+    "Landsat 8 (26/09/2021)": landsat1,
+    "Sentinel 2 (30/09/2021)": sentinel1,
+    "Sentinel 2 (10/10/2021)": sentinel2,
+    "Sentinel 2 (15/10/2021)": sentinel3
+};
+
+var appearanceControl = L.control.appearance
+(baseMaps, overlayMaps, overlayMaps2, {opacity:true, sortLayers: true});
+ 
+appearanceControl.addTo(map);
+
+// Create Leaflet control object for legend
+let legend = L.control({position: "topright"});
+
+// Function that runs when legend is added to map
+legend.onAdd = function() {
+
+    // Create <div> element and populate it with HTML
+    let div = L.DomUtil.create("div", "legend");        
+    div.innerHTML = 
+        '<b>Avance de la lava</b><br>Fechas:<br>' +
+        '<i style="background-color: #0c0927"></i>17/10/2021<br>' +
+        '<i style="background-color: #231151"></i>15/10/2021<br>' +
+        '<i style="background-color: #410f74"></i>12/10/2021<br>' +
+        '<i style="background-color: #5e177f"></i>09/10/2021<br>' +
+        '<i style="background-color: #7b2282"></i>05/10/2021<br>' +
+        '<i style="background-color: #982c80"></i>01/10/2021<br>' +
+        '<i style="background-color: #b63679"></i>28/09/2021<br>' +
+        '<i style="background-color: #d3426e"></i>27/09/2021<br>' +
+        '<i style="background-color: #eb5761"></i>26/09/2021<br>' +
+        '<i style="background-color: #f8765c"></i>25/09/2021<br>' +
+        '<i style="background-color: #fe9969"></i>24/09/2021<br>' +
+        '<i style="background-color: #febb80"></i>23/09/2021<br>' +
+        '<i style="background-color: #fedc9d"></i>22/09/2021<br>' +
+        '<i style="background-color: #fcfdbf"></i>22/09/2021<br>' ;
+        
+
+    // Return the legend <div> containing the HTML content
+    return div;
+
+};
+
+legend.addTo(map);
+
+var sidebar = L.control.sidebar('sidebar').addTo(map);
+
+L.control.scale().addTo(map);
+
+    </script>
+</body>
+</html>
