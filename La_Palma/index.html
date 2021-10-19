@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta charset="utf-8">
     <title>Erupción en La Palma</title>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -47,9 +47,9 @@
         }
     </style>
 </head>
+
 <body>
     <div id="sidebar" class="sidebar collapsed">
-        <!-- Nav tabs -->
         <div class="sidebar-tabs">
             <ul role="tablist">
                 <li><a href="#home" role="tab"><i class="fa fa-bars"></i></a></li>
@@ -58,7 +58,6 @@
 
         </div>
 
-        <!-- Tab panes -->
         <div class="sidebar-content">
             <div class="sidebar-pane" id="home">
                 <h1 class="sidebar-header">
@@ -91,7 +90,6 @@
 
 
 <script>
-
 
 var OpenStreetMap =  L.tileLayer(
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", 
@@ -169,7 +167,6 @@ var lava = L.geoJSON(LP_Lava_flow, {
             }
         }).addTo(map);
         
-
 var baseMaps = {
     "Open Street Map": OpenStreetMap,
     "Base IGN": IGN,
@@ -230,6 +227,6 @@ var sidebar = L.control.sidebar('sidebar').addTo(map);
 
 L.control.scale().addTo(map);
 
-    </script>
+</script>
 </body>
 </html>
